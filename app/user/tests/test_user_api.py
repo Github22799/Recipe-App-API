@@ -5,6 +5,8 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from app.core.models import User
+
 CREATE_USER_URL = reverse('user:create')
 
 VALID_PAYLOAD_1 = {
@@ -15,7 +17,7 @@ VALID_PAYLOAD_1 = {
 
 SHORT_PASSWORD_PAYLOAD = {
     'email': 'hello@hello.com',
-    'password': 'abc',
+    'password': 'a' * (User.PASS_MIN_LENGTH - 1),
     'name': 'Hello 1'
 }
 

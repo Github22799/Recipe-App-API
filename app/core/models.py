@@ -28,6 +28,8 @@ class UserManager(BaseUserManager):
 
 class User(PermissionsMixin, AbstractBaseUser):
 
+    PASS_MIN_LENGTH = 5
+
     name = models.CharField(max_length=50)
     email = models.EmailField(unique=True, max_length=255)
     is_active = models.BooleanField(default=True)
