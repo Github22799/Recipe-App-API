@@ -9,6 +9,7 @@ from core.models import User
 
 CREATE_USER_URL = reverse('user:create')
 GET_TOKEN_URL = reverse('user:token')
+USER_PROFILE_UPDATE_URL = reverse('user:update')
 
 EMAIL_1 = 'hello@hello.com'
 PASS_1 = 'pass123'
@@ -19,9 +20,20 @@ VALID_PAYLOAD_1 = {
     'name': 'Hello 1'
 }
 
+VALID_PAYLOAD_2 = {
+    'email': 'email2@email.com',
+    'password': 'passss123',
+    'name': 'Hello 1'
+}
+
 VALID_PAYLOAD_1_WRONG_PASS = {
     'email': EMAIL_1,
     'password': PASS_1 + 'wrong',
+}
+
+VALID_PAYLOAD_NO_PASS_1 = {
+    'name': 'no pass',
+    'email': 'nopass@email.com'
 }
 
 SHORT_PASSWORD_PAYLOAD = {
@@ -101,3 +113,46 @@ class UnauthorizedUserAPITest(TestCase):
     def test_token_non_existing_user(self):
         response = self.client.post(GET_TOKEN_URL, VALID_PAYLOAD_1)
         self.assertGetTokenFaliure(response)
+
+    def test_get_user_profile_unauthorized(self):
+        response = self.client.get(USER_PROFILE_UPDATE_URL)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class AuthorizedUserAPITests(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = create_user(**VALID_PAYLOAD_1)
+        self.client.force_authenticate(user=self.user)
+
+    def assertUserIsValidFromResponse(self, response):
+        self.assertNotIn('password', response.data)
+        cur_user_info = {
+            'name': self.user.name,
+            'email': self.user.email
+        }
+        self.assertEqual(response.data, cur_user_info)
+
+    def assertUserIsValidFromPayload(self, payload):
+        self.assertEqual(self.user.name, payload['name'])
+        self.assertEqual(self.user.email, payload['email'])
+        password = payload['password']
+        if password:
+            self.assertTrue(self.user.check_password(password))
+
+    def test_get_user_profile_authorized(self):
+        response = self.client.get(USER_PROFILE_UPDATE_URL)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertUserIsValidFromResponse(response)
+
+    def test_post_user_profile_not_allowed(self):
+        response = self.client.post(USER_PROFILE_UPDATE_URL)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_update_user_profile(self):
+        response = self.client.patch(USER_PROFILE_UPDATE_URL, VALID_PAYLOAD_2)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.user.refresh_from_db()
+        self.assertUserIsValidFromPayload(VALID_PAYLOAD_2)

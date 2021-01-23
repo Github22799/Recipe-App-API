@@ -10,6 +10,8 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['email', 'password', 'name']
         extra_kwargs = {
             'password': {
+                'style': {'input_type': 'password'},
+                'trim_whitespace': False,
                 'write_only': True,
                 'min_length': User.PASS_MIN_LENGTH
             }
@@ -17,6 +19,16 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_fields):
         return get_user_model().objects.create_user(**validated_fields)
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password', None)
+        user = super().update(instance, validated_data)
+
+        if password:
+            user.set_password(password)
+            user.save()
+
+        return user
 
 
 class UserTokenSerializer(serializers.Serializer):
