@@ -23,7 +23,6 @@ class UserTokenSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(
         style={'input_type': 'password'},
-        min_length=User.PASS_MIN_LENGTH,
         trim_whitespace=False
     )
 
