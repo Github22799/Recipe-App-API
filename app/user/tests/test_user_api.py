@@ -8,11 +8,20 @@ from rest_framework.test import APIClient
 from core.models import User
 
 CREATE_USER_URL = reverse('user:create')
+GET_TOKEN_URL = reverse('user:token')
+
+EMAIL_1 = 'hello@hello.com'
+PASS_1 = 'pass123'
 
 VALID_PAYLOAD_1 = {
-    'email': 'hello@hello.com',
-    'password': 'pass123',
+    'email': EMAIL_1,
+    'password': PASS_1,
     'name': 'Hello 1'
+}
+
+VALID_PAYLOAD_1_WRONG_PASS = {
+    'email': EMAIL_1,
+    'password': PASS_1 + 'wrong',
 }
 
 SHORT_PASSWORD_PAYLOAD = {
@@ -28,6 +37,7 @@ def get_user_manager():
 
 def filter_users(**kwargs):
     return get_user_manager().filter(**kwargs)
+
 
 def get_user(**kwargs):
     return get_user_manager().get(**kwargs)
@@ -64,3 +74,30 @@ class UnauthorizedUserAPITest(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertFalse(user_exists)
+
+    def assertGetTokenSuccess(self, response):
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('token', response.data)
+
+    def assertGetTokenFaliure(self, response):
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotIn('token', response.data)
+
+    def test_token_valid(self):
+        create_user(**VALID_PAYLOAD_1)
+        response = self.client.post(GET_TOKEN_URL, VALID_PAYLOAD_1)
+        self.assertGetTokenSuccess(response)
+
+    def test_token_wrong_password(self):
+        create_user(**VALID_PAYLOAD_1)
+        response = self.client.post(GET_TOKEN_URL, VALID_PAYLOAD_1_WRONG_PASS)
+        self.assertGetTokenFaliure(response)
+
+    def test_token_no_email(self):
+        payload = {'password': 'abcdefg'}
+        response = self.client.post(GET_TOKEN_URL, payload)
+        self.assertGetTokenFaliure(response)
+
+    def test_token_non_existing_user(self):
+        response = self.client.post(GET_TOKEN_URL, VALID_PAYLOAD_1)
+        self.assertGetTokenFaliure(response)
