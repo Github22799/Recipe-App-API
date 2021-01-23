@@ -148,7 +148,10 @@ class AuthorizedUserAPITests(TestCase):
 
     def test_post_user_profile_not_allowed(self):
         response = self.client.post(USER_PROFILE_UPDATE_URL)
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
     def test_update_user_profile(self):
         response = self.client.patch(USER_PROFILE_UPDATE_URL, VALID_PAYLOAD_2)
