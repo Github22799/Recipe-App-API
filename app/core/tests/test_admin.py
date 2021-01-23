@@ -33,7 +33,10 @@ class AdminTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_user_change_page(self):
-        self.assert_GET_returns_200('admin:core_user_change', args=[self.user.id])
+        self.assert_GET_returns_200(
+            'admin:core_user_change',
+            args=[self.user.id]
+        )
 
     def test_user_add_page(self):
         self.assert_GET_returns_200('admin:core_user_add')

@@ -5,7 +5,11 @@ from django.contrib.auth import get_user_model
 class ModelTests(TestCase):
 
     def create_user(self, email='abc@abc.com', password='abc123', **kwargs):
-        return get_user_model().objects.create_user(email=email, password=password, **kwargs)
+        return get_user_model().objects.create_user(
+            email=email,
+            password=password,
+            **kwargs
+        )
 
     def test_create_user_email_is_normalized(self):
         email = 'heLlo@EmAiL.com'
