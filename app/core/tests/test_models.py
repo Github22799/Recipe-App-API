@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+from core.models import Tag
 
 
 class ModelTests(TestCase):
@@ -36,3 +37,10 @@ class ModelTests(TestCase):
 
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
+
+    def test_tag_str_representation(self):
+        tag = Tag.objects.create(
+            name='TagName',
+            user=self.create_user()
+        )
+        self.assertEqual(str(tag), tag.name)
