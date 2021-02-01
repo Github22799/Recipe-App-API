@@ -24,7 +24,7 @@ SECRET_KEY = 'bcy%*=fh(9h(i^&*v9t%dqsmtszscv0e&0acx45)30y_1apz7('
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.1.4']
 
 # Application definition
 

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
@@ -41,9 +42,34 @@ class User(PermissionsMixin, AbstractBaseUser):
     objects = UserManager()
 
 
-class Tag(models.Model):
+class AttributeModel(models.Model):
+    """A model that just contains a name and a user associated with it."""
     name = models.CharField(max_length=255)
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
+
+
+class Tag(AttributeModel):
+    pass
+
+
+class Ingredient(AttributeModel):
+    pass
+
+
+class Recipe(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    title = models.CharField(max_length=255)
+    minutes_required = models.IntegerField()
+    price = models.DecimalField(max_digits=5, decimal_places=2)
+    link = models.CharField(max_length=255, blank=True)
+    ingredients = models.ManyToManyField('Ingredient', blank=True)
+    tags = models.ManyToManyField('Tag', blank=True)
+
+    def __str__(self):
+        return self.title

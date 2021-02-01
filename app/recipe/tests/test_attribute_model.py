@@ -8,6 +8,10 @@ from rest_framework import status
 from core.models import Tag
 from recipe.serializers import TagSerializer
 
+# TODO testing the Tag model instead of the Attribute model
+#  because I don't know a way to generate urls and send
+#  requests to a model where its urls won't be registered.
+
 TAG_1 = 'Vegan'
 TAG_2 = 'Dessert'
 TAG_3 = 'Breakfast'
