@@ -1,8 +1,22 @@
+import os
+import uuid
 from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from django.contrib.auth import get_user_model
+
+
+def get_image_upload_path(instance, filename):
+    split_filename = filename.split('.')
+
+    if len(split_filename) == 1:
+        extension = ''
+    else:
+        extension = '.' + split_filename[-1]
+
+    filename = f'{uuid.uuid4()}{extension}'
+
+    return os.path.join('upload/recipe', filename)
 
 
 class UserManager(BaseUserManager):
@@ -29,7 +43,6 @@ class UserManager(BaseUserManager):
 
 
 class User(PermissionsMixin, AbstractBaseUser):
-
     PASS_MIN_LENGTH = 5
 
     name = models.CharField(max_length=50)
@@ -59,12 +72,22 @@ class Ingredient(AttributeModel):
     pass
 
 
+class Image(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    image = models.ImageField(upload_to=get_image_upload_path)
+    description = models.CharField(max_length=255, blank=True)
+
+
 class Recipe(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE
     )
     title = models.CharField(max_length=255)
+    images = models.ManyToManyField('Image', blank=True)
     minutes_required = models.IntegerField()
     price = models.DecimalField(max_digits=5, decimal_places=2)
     link = models.CharField(max_length=255, blank=True)

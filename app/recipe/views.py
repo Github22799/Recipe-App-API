@@ -1,8 +1,9 @@
-from core.models import Tag, Ingredient, Recipe
+from core.models import Tag, Ingredient, Recipe, Image
 from rest_framework.mixins import ListModelMixin, CreateModelMixin
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-from .serializers import TagSerializer, IngredientSerializer, RecipeSerializer, RecipeDetailSerializer
+from .serializers import TagSerializer, \
+    IngredientSerializer, RecipeSerializer, RecipeDetailSerializer, ImageSerializer
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
 
@@ -43,3 +44,16 @@ class RecipeViewSet(ModelViewSet):
         if self.action == 'retrieve':
             return RecipeDetailSerializer
         return self.serializer_class
+
+
+class ImageViewSet(ModelViewSet):
+    serializer_class = ImageSerializer
+    queryset = Image.objects.all()
+    authentication_classes = (TokenAuthentication, )
+    permission_classes = (IsAuthenticated, )
+
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        return serializer.save(user=self.request.user)

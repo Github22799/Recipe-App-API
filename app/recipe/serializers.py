@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from core.models import Tag, Ingredient, Recipe
+from core.models import Tag, Ingredient, Recipe, Image
 
 
 class AttributeModelSerializer(serializers.ModelSerializer):
@@ -13,6 +13,16 @@ class AttributeModelSerializer(serializers.ModelSerializer):
             read_only_fields = ('id',)
 
         self.Meta = Meta
+
+
+class ImageSerializer(serializers.ModelSerializer):
+    # TODO you might change it to True later.
+    image = serializers.ImageField(use_url=False)
+
+    class Meta:
+        model = Image
+        fields = ('id', 'image', 'description')
+        read_only_fields = ('id', )
 
 
 class TagSerializer(AttributeModelSerializer):
@@ -33,12 +43,13 @@ class RecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = (
-            'id', 'title', 'minutes_required', 'price',
+            'id', 'title', 'images', 'minutes_required', 'price',
             'link', 'ingredients', 'tags'
         )
         read_only_fields = ('id',)
 
 
 class RecipeDetailSerializer(RecipeSerializer):
+    images = ImageSerializer(many=True, read_only=True)
     ingredients = IngredientSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)

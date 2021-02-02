@@ -3,8 +3,9 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
-from core.models import Recipe, Tag, Ingredient
-from recipe.serializers import RecipeSerializer, RecipeDetailSerializer, TagSerializer, IngredientSerializer
+from core.models import Recipe, Tag, Ingredient, Image
+from recipe.serializers import RecipeSerializer,\
+    RecipeDetailSerializer, TagSerializer, IngredientSerializer, ImageSerializer
 
 
 RECIPE_URL = reverse('recipe:recipe-list')
@@ -53,6 +54,11 @@ class AuthorizedRecipeTests(TestCase):
 
     def create_ingredient(self, name='xyz', user=None):
         return self.create_attribute(Ingredient, name=name, user=user)
+
+    def create_image(self, user=None, image='./images/1.jpg', **kwargs):
+        if user is None:
+            user = self.user
+        return Image.objects.create(user=user, image=image, **kwargs)
 
     def assertRecipeDictEqual(self, recipe, dictionary):
         for key in dictionary:
@@ -142,6 +148,11 @@ class AuthorizedRecipeTests(TestCase):
         ingredient1 = self.create_ingredient(name='abc')
         ingredient2 = self.create_ingredient(name='def')
         self.assertAttrIDsInRecipe(IngredientSerializer, 'ingredients', ingredient1, ingredient2)
+
+    def test_recipe_images_are_present(self):
+        image1 = self.create_image()
+        image2 = self.create_image()
+        self.assertAttrIDsInRecipe(ImageSerializer, 'images', image1, image2)
 
     def test_recipe_put_request(self):
         recipe = self.create_recipe()
