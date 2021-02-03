@@ -80,6 +80,9 @@ class Image(models.Model):
     image = models.ImageField(upload_to=get_image_upload_path)
     description = models.CharField(max_length=255, blank=True)
 
+    def __str__(self):
+        return self.description
+
 
 class Recipe(models.Model):
     user = models.ForeignKey(

@@ -175,3 +175,77 @@ class AuthorizedRecipeTests(TestCase):
 
         self.assertEqual(len(recipe.tags.all()), 1)
         self.assertEqual(recipe.title, payload['title'])
+
+    def create_recipe_with_given_attributes(self, create_func, field_name, attr_name):
+        payload = self.get_recipe_payload()
+        recipe = self.create_recipe(**payload)
+        attr = create_func(name=attr_name)
+        getattr(recipe, field_name).add(attr)
+        return [recipe, attr]
+
+    def create_recipe_with_a_tag(self, tag_name):
+        return self.create_recipe_with_given_attributes(
+            self.create_tag,
+            'tags',
+            tag_name
+        )
+
+    def create_recipe_with_an_ingredient(self, ingredient_name):
+        return self.create_recipe_with_given_attributes(
+            self.create_ingredient,
+            'ingredients',
+            ingredient_name
+        )
+
+    def assert_filter_recipes_by_attributes(self, create_func, field_name):
+        recipe1, attr1 = create_func('a')
+        recipe2, attr2 = create_func('b')
+        recipe3, attr3 = create_func('c')
+
+        response = self.client.get(RECIPE_URL, {field_name: f'{attr1.id},{attr2.id}'})
+
+        serializer1 = RecipeSerializer(recipe1)
+        serializer2 = RecipeSerializer(recipe2)
+        serializer3 = RecipeSerializer(recipe3)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertIn(serializer1.data, response.data)
+        self.assertIn(serializer2.data, response.data)
+        self.assertNotIn(serializer3.data, response.data)
+
+    def assert_filter_recipes_are_distinct(self, attr_create_func, field_name):
+        attr1 = attr_create_func(name='a')
+        attr2 = attr_create_func(name='b')
+        recipe = self.create_recipe()
+        getattr(recipe, field_name).add(attr1)
+        getattr(recipe, field_name).add(attr2)
+
+        response = self.client.get(RECIPE_URL, {field_name: f'{attr1.id},{attr2.id}'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+    def test_filter_recipes_by_tags(self):
+        self.assert_filter_recipes_by_attributes(
+            self.create_recipe_with_a_tag,
+            'tags'
+        )
+
+    def test_filter_recipes_by_ingredients(self):
+        self.assert_filter_recipes_by_attributes(
+            self.create_recipe_with_an_ingredient,
+            'ingredients'
+        )
+
+    def test_filter_recipes_by_tags_are_distinct(self):
+        self.assert_filter_recipes_are_distinct(
+            self.create_tag,
+            'tags'
+        )
+
+    def test_filter_recipes_by_ingredients_are_distinct(self):
+        self.assert_filter_recipes_are_distinct(
+            self.create_ingredient,
+            'ingredients'
+        )

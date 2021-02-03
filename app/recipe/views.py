@@ -12,7 +12,12 @@ class AttributeModelViewSet(GenericViewSet, ListModelMixin, CreateModelMixin):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        return self.queryset.filter(user=self.request.user).order_by('-name')
+        queryset = self.queryset
+        assigned_only = bool(self.request.query_params.get('assigned_only'))
+        if assigned_only:
+            queryset = queryset.filter(recipe__isnull=False)
+
+        return queryset.filter(user=self.request.user).distinct().order_by('-name')
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -34,8 +39,21 @@ class RecipeViewSet(ModelViewSet):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
+    def _get_ints_list_from_str(self, str_list, split_str=','):
+        return [int(id_str) for id_str in str_list.split(split_str)]
+
+    def filter_queryset_from_GET_parameter(self, queryset, param_name):
+        filter_str = self.request.query_params.get(param_name)
+        if filter_str:
+            filter_list = self._get_ints_list_from_str(filter_str)
+            queryset = queryset.filter(**{f'{param_name}__id__in': filter_list})
+        return queryset
+
     def get_queryset(self):
-        return self.queryset.filter(user=self.request.user)
+        queryset = self.queryset
+        queryset = self.filter_queryset_from_GET_parameter(queryset, 'tags')
+        queryset = self.filter_queryset_from_GET_parameter(queryset, 'ingredients')
+        return queryset.filter(user=self.request.user).distinct('id').order_by('-id')
 
     def perform_create(self, serializer):
         return serializer.save(user=self.request.user)

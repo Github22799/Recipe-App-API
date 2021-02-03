@@ -1,7 +1,7 @@
 from unittest.mock import patch
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from core.models import Tag, Recipe, get_image_upload_path
+from core.models import Tag, Recipe, get_image_upload_path, Image
 
 
 class ModelTests(TestCase):
@@ -54,6 +54,10 @@ class ModelTests(TestCase):
             price=5.00
         )
         self.assertEqual(str(recipe), recipe.title)
+
+    def test_image_str_representation(self):
+        image = Image(user=self.create_user(), image='', description='abc')
+        self.assertEqual(str(image), image.description)
 
     @patch('uuid.uuid4')
     def test_image_upload_filename(self, mock_object):
